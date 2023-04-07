@@ -1,59 +1,101 @@
-import time
+import csv
 
-person_found = False
-marker_found = True
+# Constants from defaults file
+EMPLOYEE_FILE = 'employees.csv'
+CUSTOMER_FILE = 'customers.csv'
+INVENTORY_FILE = 'inventory.csv'
+SALES_FILE = 'sales.csv'
+REORDER_FILE = 'reorder.csv'
 
+# Function to read from file and return list of dictionaries
+def read_file(file):
+    with open(file, mode='r', newline='') as f:
+        reader = csv.DictReader(f)
+        data = [row for row in reader]
+    return data
 
-def start():
-    robot_ctrl.set_mode(rm_define.robot_mode_free)
-    chassis_ctrl.set_trans_speed(.6)
+# Function to write list of dictionaries to file
+def write_file(file, data):
+    with open(file, mode='w', newline='') as f:
+        fieldnames = data[0].keys()
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
 
-    # move to first door
-    chassis_ctrl.move_with_distance(0, 5.00)
-    chassis_ctrl.move_with_distance(0, 2.35)
+# Function to record customer purchase
+def record_purchase():
+    inventory = read_file(INVENTORY_FILE)
+    customers = read_file(CUSTOMER_FILE)
+    sales = read_file(SALES_FILE)
 
-    # turn to enter first room
-    chassis_ctrl.rotate_with_degree(rm_define.anticlockwise, 90)
+    print("Enter Purchase Details:")
+    customer_id = input("Customer ID: ")
+    item_id = input("Item ID: ")
+    quantity = int(input("Quantity: "))
 
-    # add function to enter room and scan for a marker.  This function is set up before the start() scan_for_marker()
+    # Check if customer and item exist
+    customer = next((c for c in customers if c['ID'] == customer_id), None)
+    item = next((i for i in inventory if i['ID'] == item_id), None)
 
-    chassis_ctrl.rotate_with_degree(rm_define.clockwise, 90)  # replace when room function is complete
+    if not customer:
+        print("Customer not found.")
+        return
+    if not item:
+        print("Item not found.")
+        return
+    if quantity > int(item['Quantity']):
+        print("Not enough stock available.")
+        return
 
-    # move to corner of hall
-    chassis_ctrl.move_with_distance(0, 5.00)
-    chassis_ctrl.move_with_distance(0, 2.60)
+    # Calculate subtotal and commission
+    price = float(item['Price'])
+    subtotal = price * quantity
+    commission_rate = 0.06
+    commission = subtotal * commission_rate
+    if subtotal > 5000:
+        commission += 200
 
-    # navigate corner
-    chassis_ctrl.rotate_with_degree(rm_define.anticlockwise, 45)
-    chassis_ctrl.move_with_distance(0, 2.70)
-    chassis_ctrl.rotate_with_degree(rm_define.anticlockwise, 45)
+    # Update inventory and sales
+    item['Quantity'] = str(int(item['Quantity']) - quantity)
+    sale = {'Customer ID': customer_id, 'Item ID': item_id, 'Quantity': str(quantity), 'Subtotal': str(subtotal)}
+    sales.append(sale)
 
-    # pause for 5 seconds to re-align
-    time.sleep(5)
+    # Save changes to files
+    write_file(INVENTORY_FILE, inventory)
+    write_file(SALES_FILE, sales)
 
-    # move to second door
-    chassis_ctrl.move_with_distance(0, 5.00)
-    chassis_ctrl.move_with_distance(0, 0.10)
+    # Display purchase details
+    print("\nPurchase Details:")
+    print("Customer Name:", customer['Name'])
+    print("Item Name:", item['Name'])
+    print("Quantity:", quantity)
+    print("Price per item:", price)
+    print("Subtotal:", subtotal)
+    print("Commission:", commission)
 
-    # turn to enter room. This room will be a 2, and won't be entered
-    chassis_ctrl.rotate_with_degree(rm_define.anticlockwise, 90)
-    chassis_ctrl.rotate_with_degree(rm_define.clockwise, 90)
+# Main program
+while True:
+    print("\nSimpson Carpet World Company Services System")
+    print("1. Enter a New Employee.")
+    print("2. Enter a New Customer.")
+    print("3. Enter a New Inventory Item.")
+    print("4. Record Customer Purchase.")
+    print("5. Print Employee Listing.")
+    print("6. Print Customers by Branch.")
+    print("7. Print Orders By Customer.")
+    print("8. Print Reorder Listing.")
+    print("9. Quit Program.")
 
-    # move to third door
-    chassis_ctrl.move_with_distance(0, 5.00)
-    chassis_ctrl.move_with_distance(0, 3.80)
-
-    # turn to enter third room
-    chassis_ctrl.rotate_with_degree(rm_define.anticlockwise, 90)
-    # enter room and scan for marker
-    chassis_ctrl.rotate_with_degree(rm_define.clockwise, 90)  # replace when room is measured
-
-    # move to fourth room
-    chassis_ctrl.move_with_distance(0, 5.00)
-    chassis_ctrl.move_with_distance(0, 5.00)
-    chassis_ctrl.move_with_distance(0, 0.40)
-
-    # turn to enter fourth room
-    chassis_ctrl.rotate_with_degree(rm_define.anticlockwise, 90)
-    # enter room and scan for marker
-    chassis_ctrl.rotate_with_degree(rm_define.clockwise, 90)  # replace when room is measured
+    choice = input("Enter choice (1-9): ")
+    if choice == '1':
+        # Code for entering new employee
+        pass
+    elif choice == '2':
+        # Code for entering new customer
+        pass
+    elif choice == '3':
+        # Code for entering new inventory item
+        pass
+    elif choice == '4':
+        record_purchase()
+    elif choice == '5':
