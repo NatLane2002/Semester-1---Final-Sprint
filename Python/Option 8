@@ -1,0 +1,61 @@
+# Author: Braden Skiffington
+# Date written: April 6 2023
+
+# Final Sprint - Python - Option 8
+# Printing the reorder listing
+
+# Import libraires
+import FormatValues as FV
+import datetime
+
+# Date as of today
+today = datetime.date.today()
+
+print("")
+
+itemNumber = 0
+orderInformation = "XXXXXXXXXXXX"
+totalItemsOrdered = 0
+totalCost = "$65.00"
+
+# Open and Read Data file
+f = open("NewInvItem.dat", "r")
+
+# Print headings
+print("Simpson's Carpet World")
+print("482 Torbay Road")
+print("(709)123-4567")
+print()
+print(f"Reorder listing report for {today}")
+print()
+print(f"Item       Item            Item     Item       Order       Order")
+print(f"Number     Description    Colour    Size       Quantity     Date")
+print("---------------------------------------------------------------------")
+
+
+# Go through data file
+for inventoryData in f:
+
+    inventoryData = inventoryData.strip("\n")
+    splitInventoryData = inventoryData.split(",")
+
+    itemDescription = splitInventoryData[0].strip()
+    itemColor = splitInventoryData[1].strip()
+    itemSize = splitInventoryData[2].strip()
+    itemPattern = splitInventoryData[3].strip()
+    itemType = splitInventoryData[4].strip()
+    itemCost = splitInventoryData[5].strip()
+    itemRetailCost = splitInventoryData[6].strip()
+    itemQOH = splitInventoryData[7].strip()
+    itemReorderPoint = splitInventoryData[8].strip()
+    itemMaxLevel = splitInventoryData[9].strip()
+
+    if itemQOH <= itemReorderPoint:
+        # Print outputs
+        print(f"{itemNumber:<5d}      {itemDescription:<11s}    {itemColor:<7s}    {itemSize:<4s}       {itemQOH:<4s}    {today}")
+        print()
+        print(f"Order Information: {orderInformation:<60s}")
+        totalItemsOrdered += 1
+
+print("=" * 69)
+print(f"Total Items Ordered: {totalItemsOrdered:<5d}                         Total Cost: {totalCost:>5s}")
