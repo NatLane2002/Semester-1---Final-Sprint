@@ -11,6 +11,9 @@ import FormatValues as FV
 # Import time library
 import time
 
+# Import csv library
+import csv
+
 # open the defaults file and assign variables
 defaults = open("defaults.dat", "r")
 
@@ -348,8 +351,13 @@ def PrintEmpList():
 
     time.sleep(2)
 
+    ages = []
+
     #Employee counter
     EmployeeCounter = 0
+
+    # Total salary accumulator
+    TotalSalary = 0
 
     #Print Report Heading and information
     print()
@@ -388,16 +396,43 @@ def PrintEmpList():
         BirthDay = (SplitNewEmpLine[12].strip())
         Dependants = (SplitNewEmpLine[13].strip())
 
+        BirthDayObj = datetime.datetime.strptime(BirthDay, "%m-%d-%Y").date()
+        age = (datetime.date.today() - BirthDayObj).days // 365
+        ages.append(age)
+
+        # Counters and accumulators
         EmployeeCounter += 1
+        TotalSalary += float(Salary)
 
         print(f"{employeeID:<4}  {EmpName:<17} {PhoneNum:<13}{HireDate:<10}   {Branch:<15}  {Title:<22} ${Salary:<10}{BirthDay:<10}")
-        print(f"Employee Address:                                         {Add:>20}, {City:>19}, {ProvState:>2}, {PostCode:>6}")
+        print(f"Employee Address:                                                {Add:>20}, {City:>12}, {ProvState:>2}, {PostCode:>6}")
         print(f"Employee Skills: {Skill:>94}")
         print()
 
     print("================================================================================================================")
     print(f"Total Employees: {EmployeeCounter:<4} ")
     print()
+
+    # Calculate the average salary of all employees in the report
+    AverageSalary = TotalSalary / EmployeeCounter
+
+    # Sort the ages in ascending order
+    ages.sort()
+
+    # Calculate the median age
+    if EmployeeCounter % 2 == 0:
+        MedianAge = (ages[EmployeeCounter//2-1] + ages[EmployeeCounter//2]) / 2
+    else:
+        MedianAge = ages[EmployeeCounter//2]
+
+    # Print the results
+    print("--------------------------------------------------")
+    print(f"The average salary of the employees is ${AverageSalary:,.2f}.")
+
+    # Print the results
+    print()
+    print(f"The median age of employees is {int(MedianAge)} years old.")
+    print("--------------------------------------------------")
 
 def PrintCustByBran():
     print()
@@ -421,8 +456,14 @@ def PrintReordList():
 
     time.sleep(2)
 
+    # Create counter and accumulators
     totalItemsOrdered = 0
     totalCost = 0
+    totalItemsOnHand = 0
+    totalMaxStock = 0
+
+    # Initialize a dictionary to store the count of items to be ordered for each category
+    categories = {}
 
     # Open and Read Data file
     f = open("NewInvItem.dat", "r")
@@ -457,19 +498,44 @@ def PrintReordList():
         itemMaxLevel = splitInventoryData[10].strip()
         orderInformation = splitInventoryData[11].strip()
 
+        # Add to accumulators
+        totalItemsOnHand += int(itemQOH)
+        totalMaxStock += int(itemMaxLevel)
+
         if itemQOH <= itemReorderPoint:
             # Print outputs
             print(f"{itemNumber:<5}   {itemDescription:<25}    {itemColor:<8}  {itemSize:<4}   {itemQOH:<4}        {str(today):>10}")
-            print(f"Order Information: {orderInformation:<60}")
+            print(f"Order Information: {orderInformation:>57}")
             print()
 
             totalItemsOrdered += 1
             itemCost = float(itemCost)
             totalCost += itemCost
 
+        # Check if the item needs to be reordered
+        if itemQOH <= itemReorderPoint:
+            # Update count for the category
+            categories[itemType] = categories.get(itemType, 0) + 1
+
     print("=" * 77)
     print(f"Total Items Ordered: {totalItemsOrdered:<5}                            Total Cost: {FV.FDollar2(totalCost):>10}")
     print()
+
+    # Find the category with the highest count
+    MostOrderedCategory = max(categories, key=categories.get)
+
+    # Print the result
+    print()
+    print("----------------------------------------------------------------------------------")
+    print(f"The category that needs the most orders is {MostOrderedCategory}, with {categories[MostOrderedCategory]} items to be reordered.")
+
+    # Find the percentage full
+    PercentageFull = round((totalItemsOnHand / totalMaxStock) * 100, 2)
+
+    # Print the result
+    print()
+    print(f"The total stock is {PercentageFull}% full.")
+    print("----------------------------------------------------------------------------------")
 
 def QuitProg():
     print()
